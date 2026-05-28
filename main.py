@@ -85,6 +85,14 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
                 state='up'
                 reps+=1
 
+            #aca va el poas 4, las alertas de si ta bien o ta mal
+            warnings = [] #array dodne guardmos las advertencias
+            if state == 'down': #solo chequea si la persona ya esta posicion baja
+                if knee_angle > 100:
+                    warnings.append("Baja mas")
+                if hip_angle < 80:
+                    warnings.append("Espalda recta")
+
             #mostramos los angulos
             h, w = frame.shape[:2]
 
@@ -102,7 +110,7 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
             cv2.putText(image_rgb, "ESTADO", (120,25),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6,(150,150,150),1
                         )
-            cv2.putText(image_rgb,state.upper(),(120,25),
+            cv2.putText(image_rgb,state.upper(),(120,55),
                         cv2.FONT_HERSHEY_SIMPLEX,1.0,(0,250,0),2)
 
             knee_px = (int(knee[0]*w),int(knee[1]*h))
@@ -117,16 +125,30 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
                         hip_px,
                         cv2.FONT_HERSHEY_SIMPLEX,0.7, (255,255,0),2
                         )
+            
+            #alertas... o advertencias, como prefieras, dunno
+            y_warn = 120 #aja, altura vertical
+
+            #loop para mostrar todas las advertencias
+            for warning in warnings:
+                cv2.rectangle(image_rgb, (0, y_warn - 25), (300, y_warn + 10), (0, 0, 180), -1)#mostranis el texto en un resctagylo rojo
+                cv2.putText(image_rgb, warning, (10, y_warn),#mostramos el texto
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                y_warn += 45 #movemos la siguiente advertencia pa bajo
+
 
             mp_drawing.draw_landmarks(
                 image_rgb, #la imagen donde c va a draw
                 results.pose_landmarks, #los 33 puntos del cuerpo
                 mp_pose.POSE_CONNECTIONS #los huesitos jiji
             )
+        
 
 
         #pa verlo
         cv2.imshow('IA COACH', image_rgb)
+        frame_resized = cv2.resize(image_rgb, (1280, 720))
+        cv2.imshow('IA COACH', frame_resized)
 
         #pa salir
         if cv2.waitKey(10) & 0xFF == ord('q'):
